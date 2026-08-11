@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: #0A0A0A;
+  }
+  ::selection {
+    background-color: #FF5C00;
+    color: #0A0A0A;
+  }
+  *:focus-visible {
+    outline: 2px solid #FF5C00;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-base-900 border border-white/5 rounded-xl;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5
+           font-display font-semibold text-sm text-base-950 transition-all
+           hover:bg-accent-hover hover:shadow-glow-sm active:scale-[0.98]
+           disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-base-800 px-4 py-2.5
+           font-display font-medium text-sm text-white/90 transition-all
+           hover:border-accent/50 hover:text-white active:scale-[0.98]
+           disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .input-field {
+    @apply w-full rounded-lg border border-white/10 bg-base-950 px-3.5 py-2.5 text-sm text-white
+           placeholder:text-white/30 outline-none transition-colors
+           focus:border-accent/60 focus:ring-1 focus:ring-accent/40;
+  }
+  .label-field {
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/50;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+  }
+}

@@ -1,0 +1,26 @@
+# CuraLabs3D - NFC Hub Manager
+# Redirecionamento para Single Page Application (React Router) na Hostinger.
+# Evita erro 404 ao navegar/recarregar rotas como /dashboard ou /nfc/TAG-001.
+
+Options -MultiViews
+RewriteEngine On
+
+# Não reescreve requisições para arquivos ou pastas que realmente existem
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Encaminha tudo para o index.html, que entrega o roteamento ao React
+RewriteRule ^ index.html [QSA,L]
+
+# Cache de assets estáticos gerados pelo Vite (hash no nome do arquivo)
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>
+
+# Compressão
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
