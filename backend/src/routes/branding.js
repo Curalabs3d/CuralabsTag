@@ -16,7 +16,7 @@ router.get('/', async (req, res, next) => {
   try {
     const tenant = await withTenantContext(req.tenantContext, async (client) => {
       const { rows } = await client.query(
-        'SELECT id, name, logo_url, brand_color, welcome_message FROM tenants WHERE id = $1',
+        'SELECT id, name, logo_url, brand_color, background_color, welcome_message FROM tenants WHERE id = $1',
         [req.tenantScope]
       );
       return rows[0];
@@ -26,10 +26,10 @@ router.get('/', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// PUT /api/branding — atualiza nome, logo, cor de destaque e mensagem de boas-vindas
+// PUT /api/branding — atualiza nome, logo, cores e mensagem de boas-vindas
 router.put('/', async (req, res, next) => {
   try {
-    const { name, logoUrl, brandColor, welcomeMessage } = req.body;
+    const { name, logoUrl, brandColor, backgroundColor, welcomeMessage } = req.body;
 
     if (name !== undefined && !name.trim()) {
       return res.status(400).json({ error: 'O nome da empresa não pode ficar em branco.' });
@@ -38,7 +38,10 @@ router.put('/', async (req, res, next) => {
       return res.status(400).json({ error: 'Nome da empresa deve ter até 120 caracteres.' });
     }
     if (brandColor && !HEX_COLOR_REGEX.test(brandColor)) {
-      return res.status(400).json({ error: 'Cor inválida. Use o formato hexadecimal, ex: #FF5C00.' });
+      return res.status(400).json({ error: 'Cor de destaque inválida. Use o formato hexadecimal, ex: #FF5C00.' });
+    }
+    if (backgroundColor && !HEX_COLOR_REGEX.test(backgroundColor)) {
+      return res.status(400).json({ error: 'Cor de fundo inválida. Use o formato hexadecimal, ex: #FFFFFF.' });
     }
     if (welcomeMessage && welcomeMessage.length > 160) {
       return res.status(400).json({ error: 'Mensagem de boas-vindas deve ter até 160 caracteres.' });
@@ -50,17 +53,18 @@ router.put('/', async (req, res, next) => {
       if (!existing) return null;
 
       await client.query(
-        `UPDATE tenants SET name = $1, logo_url = $2, brand_color = $3, welcome_message = $4 WHERE id = $5`,
+        `UPDATE tenants SET name = $1, logo_url = $2, brand_color = $3, background_color = $4, welcome_message = $5 WHERE id = $6`,
         [
           name !== undefined ? name.trim() : existing.name,
           logoUrl !== undefined ? (logoUrl || null) : existing.logo_url,
           brandColor !== undefined ? (brandColor || null) : existing.brand_color,
+          backgroundColor !== undefined ? (backgroundColor || null) : existing.background_color,
           welcomeMessage !== undefined ? (welcomeMessage || null) : existing.welcome_message,
           existing.id,
         ]
       );
       const { rows } = await client.query(
-        'SELECT id, name, logo_url, brand_color, welcome_message FROM tenants WHERE id = $1',
+        'SELECT id, name, logo_url, brand_color, background_color, welcome_message FROM tenants WHERE id = $1',
         [existing.id]
       );
       return rows[0];
