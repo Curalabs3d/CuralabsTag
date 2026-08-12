@@ -12,6 +12,7 @@ export default function BrandingSettings() {
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
 
+  const [name, setName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [brandColor, setBrandColor] = useState(DEFAULT_COLOR);
   const [welcomeMessage, setWelcomeMessage] = useState('');
@@ -22,6 +23,7 @@ export default function BrandingSettings() {
       try {
         const { branding } = await api.getBranding(token);
         if (cancelled) return;
+        setName(branding.name || '');
         setLogoUrl(branding.logo_url || '');
         setBrandColor(branding.brand_color || DEFAULT_COLOR);
         setWelcomeMessage(branding.welcome_message || '');
@@ -41,7 +43,7 @@ export default function BrandingSettings() {
     setError(null);
     setSaved(false);
     try {
-      await api.updateBranding(token, { logoUrl, brandColor, welcomeMessage });
+      await api.updateBranding(token, { name, logoUrl, brandColor, welcomeMessage });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -68,6 +70,14 @@ export default function BrandingSettings() {
         </p>
 
         <div className="space-y-4">
+          <div>
+            <label className="label-field">Nome da empresa</label>
+            <input
+              value={name} onChange={(e) => setName(e.target.value)}
+              className="input-field" placeholder="Ex: Giacomelli Imóveis" required
+            />
+          </div>
+
           <div>
             <label className="label-field">URL do logotipo</label>
             <input
@@ -124,7 +134,7 @@ export default function BrandingSettings() {
                 <Building2 style={{ color: brandColor }} size={24} />
               </div>
             )}
-            <p className="text-xs font-medium uppercase tracking-wider text-white/40">Nome da Empresa</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-white/40">{name || 'Nome da Empresa'}</p>
             <h4 className="mt-1 font-display text-base font-semibold text-white">Apartamento Exemplo, 101</h4>
             {welcomeMessage && <p className="mt-2 text-xs text-white/50">{welcomeMessage}</p>}
 

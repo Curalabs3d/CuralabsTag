@@ -26,11 +26,17 @@ router.get('/', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// PUT /api/branding — atualiza logo, cor de destaque e mensagem de boas-vindas
+// PUT /api/branding — atualiza nome, logo, cor de destaque e mensagem de boas-vindas
 router.put('/', async (req, res, next) => {
   try {
-    const { logoUrl, brandColor, welcomeMessage } = req.body;
+    const { name, logoUrl, brandColor, welcomeMessage } = req.body;
 
+    if (name !== undefined && !name.trim()) {
+      return res.status(400).json({ error: 'O nome da empresa não pode ficar em branco.' });
+    }
+    if (name && name.trim().length > 120) {
+      return res.status(400).json({ error: 'Nome da empresa deve ter até 120 caracteres.' });
+    }
     if (brandColor && !HEX_COLOR_REGEX.test(brandColor)) {
       return res.status(400).json({ error: 'Cor inválida. Use o formato hexadecimal, ex: #FF5C00.' });
     }
@@ -44,8 +50,9 @@ router.put('/', async (req, res, next) => {
       if (!existing) return null;
 
       await client.query(
-        `UPDATE tenants SET logo_url = $1, brand_color = $2, welcome_message = $3 WHERE id = $4`,
+        `UPDATE tenants SET name = $1, logo_url = $2, brand_color = $3, welcome_message = $4 WHERE id = $5`,
         [
+          name !== undefined ? name.trim() : existing.name,
           logoUrl !== undefined ? (logoUrl || null) : existing.logo_url,
           brandColor !== undefined ? (brandColor || null) : existing.brand_color,
           welcomeMessage !== undefined ? (welcomeMessage || null) : existing.welcome_message,
