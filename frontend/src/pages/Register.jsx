@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Building2, Loader2, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
+import PasswordField from '../components/PasswordField.jsx';
 import { api } from '../api/client.js';
 
 const initialForm = {
@@ -97,8 +98,11 @@ export default function Register() {
                   <input type="email" required value={form.adminEmail} onChange={update('adminEmail')} className="input-field" />
                 </div>
                 <div>
-                  <label className="label-field">Senha *</label>
-                  <input type="password" required minLength={6} value={form.password} onChange={update('password')} className="input-field" />
+                  <PasswordField
+                    label="Senha *" required minLength={6}
+                    value={form.password} onChange={update('password')}
+                    autoComplete="new-password"
+                  />
                 </div>
               </div>
             </div>

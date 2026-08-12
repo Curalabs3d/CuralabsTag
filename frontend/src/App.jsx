@@ -2,6 +2,8 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import NfcLanding from './pages/NfcLanding.jsx';
@@ -15,6 +17,10 @@ export default function App() {
 
       {/* 2. Solicitação de conta corporativa */}
       <Route path="/register" element={<Register />} />
+
+      {/* Recuperação de senha */}
+      <Route path="/esqueci-senha" element={<ForgotPassword />} />
+      <Route path="/redefinir-senha" element={<ResetPassword />} />
 
       {/* 3. Painel do Super Admin da CuraLabs3D */}
       <Route

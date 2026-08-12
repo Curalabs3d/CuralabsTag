@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, Loader2, AlertCircle, Nfc } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
+import PasswordField from '../components/PasswordField.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Login() {
@@ -54,11 +55,16 @@ export default function Login() {
               />
             </div>
             <div>
-              <label className="label-field">Senha</label>
-              <input
-                type="password" required value={password}
+              <div className="flex items-center justify-between">
+                <label className="label-field !mb-0">Senha</label>
+                <Link to="/esqueci-senha" className="mb-1.5 text-[11px] font-medium text-accent hover:text-accent-hover">
+                  Esqueci minha senha
+                </Link>
+              </div>
+              <PasswordField
+                required value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-field" placeholder="••••••••"
+                autoComplete="current-password"
               />
             </div>
           </div>

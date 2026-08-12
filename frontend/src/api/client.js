@@ -27,6 +27,8 @@ export const api = {
   login: (email, password) => request('/auth/login', { method: 'POST', body: { email, password } }),
   register: (payload) => request('/auth/register', { method: 'POST', body: payload }),
   me: (token) => request('/auth/me', { token }),
+  forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: { email } }),
+  resetPassword: (token, newPassword) => request('/auth/reset-password', { method: 'POST', body: { token, newPassword } }),
 
   // Tenants (Super Admin)
   listTenants: (token, status) => request(`/tenants${status ? `?status=${status}` : ''}`, { token }),
