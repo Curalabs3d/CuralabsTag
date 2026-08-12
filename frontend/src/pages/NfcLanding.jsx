@@ -72,6 +72,9 @@ export default function NfcLanding() {
   const accent = company.brandColor || DEFAULT_ACCENT;
   const background = company.backgroundColor || DEFAULT_BG;
   const foreground = getContrastTextColor(background);
+  const mainLabel = company.mainLinkLabel || 'Ver Detalhes';
+  const sacLabel = company.sacLinkLabel || 'Atendimento / SAC';
+  const restrictedLabel = company.restrictedLinkLabel || 'Área Restrita';
 
   return (
     <div
@@ -105,9 +108,9 @@ export default function NfcLanding() {
           </div>
 
           <div className="space-y-3">
-            <ActionButton href={tag.mainLink} icon={Building2} label="Ver Detalhes" primary />
-            <ActionButton href={tag.sacLink} icon={Headset} label="Atendimento / SAC" />
-            <ActionButton href={tag.restrictedLink} icon={Lock} label="Área Restrita" />
+            <ActionButton href={tag.mainLink} icon={Building2} label={mainLabel} primary />
+            <ActionButton href={tag.sacLink} icon={Headset} label={sacLabel} />
+            <ActionButton href={tag.restrictedLink} icon={Lock} label={restrictedLabel} />
           </div>
         </div>
 

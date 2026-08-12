@@ -10,13 +10,26 @@ const router = Router();
 router.use(requireAuth, requireRole('TENANT_ADMIN'), resolveTenantScope);
 
 const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
+const MAX_LABEL_LENGTH = 40;
+
+const BRANDING_COLUMNS = `
+  id, name, logo_url, brand_color, background_color, welcome_message,
+  main_link_label, sac_link_label, restricted_link_label
+`;
+
+function validateLabel(value, fieldLabel) {
+  if (value && value.length > MAX_LABEL_LENGTH) {
+    return `${fieldLabel} deve ter até ${MAX_LABEL_LENGTH} caracteres.`;
+  }
+  return null;
+}
 
 // GET /api/branding — marca atual do tenant logado
 router.get('/', async (req, res, next) => {
   try {
     const tenant = await withTenantContext(req.tenantContext, async (client) => {
       const { rows } = await client.query(
-        'SELECT id, name, logo_url, brand_color, background_color, welcome_message FROM tenants WHERE id = $1',
+        `SELECT ${BRANDING_COLUMNS} FROM tenants WHERE id = $1`,
         [req.tenantScope]
       );
       return rows[0];
@@ -26,10 +39,13 @@ router.get('/', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// PUT /api/branding — atualiza nome, logo, cores e mensagem de boas-vindas
+// PUT /api/branding — atualiza nome, logo, cores, mensagem e rótulos dos botões
 router.put('/', async (req, res, next) => {
   try {
-    const { name, logoUrl, brandColor, backgroundColor, welcomeMessage } = req.body;
+    const {
+      name, logoUrl, brandColor, backgroundColor, welcomeMessage,
+      mainLinkLabel, sacLinkLabel, restrictedLinkLabel,
+    } = req.body;
 
     if (name !== undefined && !name.trim()) {
       return res.status(400).json({ error: 'O nome da empresa não pode ficar em branco.' });
@@ -46,6 +62,10 @@ router.put('/', async (req, res, next) => {
     if (welcomeMessage && welcomeMessage.length > 160) {
       return res.status(400).json({ error: 'Mensagem de boas-vindas deve ter até 160 caracteres.' });
     }
+    const labelError = validateLabel(mainLinkLabel, 'Rótulo do link principal')
+      || validateLabel(sacLinkLabel, 'Rótulo do link de SAC')
+      || validateLabel(restrictedLinkLabel, 'Rótulo do link de área restrita');
+    if (labelError) return res.status(400).json({ error: labelError });
 
     const tenant = await withTenantContext(req.tenantContext, async (client) => {
       const { rows: existingRows } = await client.query('SELECT * FROM tenants WHERE id = $1', [req.tenantScope]);
@@ -53,18 +73,24 @@ router.put('/', async (req, res, next) => {
       if (!existing) return null;
 
       await client.query(
-        `UPDATE tenants SET name = $1, logo_url = $2, brand_color = $3, background_color = $4, welcome_message = $5 WHERE id = $6`,
+        `UPDATE tenants SET
+           name = $1, logo_url = $2, brand_color = $3, background_color = $4, welcome_message = $5,
+           main_link_label = $6, sac_link_label = $7, restricted_link_label = $8
+         WHERE id = $9`,
         [
           name !== undefined ? name.trim() : existing.name,
           logoUrl !== undefined ? (logoUrl || null) : existing.logo_url,
           brandColor !== undefined ? (brandColor || null) : existing.brand_color,
           backgroundColor !== undefined ? (backgroundColor || null) : existing.background_color,
           welcomeMessage !== undefined ? (welcomeMessage || null) : existing.welcome_message,
+          mainLinkLabel !== undefined ? (mainLinkLabel || null) : existing.main_link_label,
+          sacLinkLabel !== undefined ? (sacLinkLabel || null) : existing.sac_link_label,
+          restrictedLinkLabel !== undefined ? (restrictedLinkLabel || null) : existing.restricted_link_label,
           existing.id,
         ]
       );
       const { rows } = await client.query(
-        'SELECT id, name, logo_url, brand_color, background_color, welcome_message FROM tenants WHERE id = $1',
+        `SELECT ${BRANDING_COLUMNS} FROM tenants WHERE id = $1`,
         [existing.id]
       );
       return rows[0];

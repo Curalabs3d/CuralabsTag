@@ -38,6 +38,9 @@ export default function BrandingSettings() {
   const [brandColor, setBrandColor] = useState(DEFAULT_ACCENT);
   const [backgroundColor, setBackgroundColor] = useState(DEFAULT_BG);
   const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [mainLinkLabel, setMainLinkLabel] = useState('');
+  const [sacLinkLabel, setSacLinkLabel] = useState('');
+  const [restrictedLinkLabel, setRestrictedLinkLabel] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +53,9 @@ export default function BrandingSettings() {
         setBrandColor(branding.brand_color || DEFAULT_ACCENT);
         setBackgroundColor(branding.background_color || DEFAULT_BG);
         setWelcomeMessage(branding.welcome_message || '');
+        setMainLinkLabel(branding.main_link_label || '');
+        setSacLinkLabel(branding.sac_link_label || '');
+        setRestrictedLinkLabel(branding.restricted_link_label || '');
       } catch (err) {
         if (!cancelled) setError(err.message);
       } finally {
@@ -66,7 +72,10 @@ export default function BrandingSettings() {
     setError(null);
     setSaved(false);
     try {
-      await api.updateBranding(token, { name, logoUrl, brandColor, backgroundColor, welcomeMessage });
+      await api.updateBranding(token, {
+        name, logoUrl, brandColor, backgroundColor, welcomeMessage,
+        mainLinkLabel, sacLinkLabel, restrictedLinkLabel,
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -131,6 +140,36 @@ export default function BrandingSettings() {
             />
             <p className="mt-1 text-right text-[11px] text-white/30">{welcomeMessage.length}/160</p>
           </div>
+
+          <div className="border-t border-white/5 pt-4">
+            <p className="mb-3 text-xs font-medium uppercase tracking-wider text-white/40">Texto dos botões (opcional)</p>
+            <div className="space-y-3">
+              <div>
+                <label className="label-field">Botão do link principal</label>
+                <input
+                  value={mainLinkLabel} onChange={(e) => setMainLinkLabel(e.target.value.slice(0, 40))}
+                  className="input-field" placeholder="Ver Detalhes"
+                />
+              </div>
+              <div>
+                <label className="label-field">Botão do link de SAC</label>
+                <input
+                  value={sacLinkLabel} onChange={(e) => setSacLinkLabel(e.target.value.slice(0, 40))}
+                  className="input-field" placeholder="Atendimento / SAC"
+                />
+              </div>
+              <div>
+                <label className="label-field">Botão do link de área restrita</label>
+                <input
+                  value={restrictedLinkLabel} onChange={(e) => setRestrictedLinkLabel(e.target.value.slice(0, 40))}
+                  className="input-field" placeholder="Área Restrita"
+                />
+              </div>
+            </div>
+            <p className="mt-2 text-[11px] text-white/30">
+              Deixe em branco para usar os textos padrão. Vale para todas as tags desta empresa.
+            </p>
+          </div>
         </div>
 
         {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
@@ -163,15 +202,15 @@ export default function BrandingSettings() {
             <div className="mt-5 space-y-2">
               <div className="flex items-center gap-2.5 rounded-lg border px-3 py-3 text-left" style={{ borderColor: `${previewAccent}66`, backgroundColor: `${previewAccent}1A` }}>
                 <Building2 size={15} style={{ color: previewAccent }} />
-                <span className="font-display text-xs font-medium" style={{ color: previewFg }}>Ver Detalhes</span>
+                <span className="font-display text-xs font-medium" style={{ color: previewFg }}>{mainLinkLabel || 'Ver Detalhes'}</span>
               </div>
               <div className="flex items-center gap-2.5 rounded-lg border px-3 py-3 text-left" style={{ borderColor: fgMuted('1A'), backgroundColor: fgMuted('0A') }}>
                 <Headset size={15} style={{ color: fgMuted('99') }} />
-                <span className="font-display text-xs font-medium" style={{ color: fgMuted('D9') }}>Atendimento / SAC</span>
+                <span className="font-display text-xs font-medium" style={{ color: fgMuted('D9') }}>{sacLinkLabel || 'Atendimento / SAC'}</span>
               </div>
               <div className="flex items-center gap-2.5 rounded-lg border px-3 py-3 text-left" style={{ borderColor: fgMuted('1A'), backgroundColor: fgMuted('0A') }}>
                 <Lock size={15} style={{ color: fgMuted('99') }} />
-                <span className="font-display text-xs font-medium" style={{ color: fgMuted('D9') }}>Área Restrita</span>
+                <span className="font-display text-xs font-medium" style={{ color: fgMuted('D9') }}>{restrictedLinkLabel || 'Área Restrita'}</span>
               </div>
             </div>
           </div>
