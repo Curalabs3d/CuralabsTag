@@ -1,42 +1,53 @@
 import { Router } from 'express';
-import { db } from '../db/index.js';
+import { withTenantContext } from '../db/index.js';
 
 const router = Router();
 
+const asPublicLookup = (callback) => withTenantContext({ tenantId: null, role: 'PUBLIC_LOOKUP' }, callback);
+
 // GET /api/public/nfc/:tagId
 // Rota pública (sem autenticação), acionada quando o cliente final aproxima
-// o chaveiro NFC do smartphone. Não expõe nenhum dado sensível de outros tenants.
-router.get('/nfc/:tagId', (req, res) => {
-  const tagId = req.params.tagId.trim();
+// o chaveiro NFC do smartphone.
+router.get('/nfc/:tagId', async (req, res, next) => {
+  try {
+    const tagId = req.params.tagId.trim();
 
-  const tag = db.prepare('SELECT * FROM nfc_tags WHERE tag_id = ? AND is_active = 1').get(tagId);
-  if (!tag) {
-    return res.status(404).json({ error: 'Chaveiro NFC não encontrado ou inativo.' });
-  }
+    const result = await asPublicLookup(async (client) => {
+      const { rows: tagRows } = await client.query(
+        'SELECT * FROM nfc_tags WHERE tag_id = $1 AND is_active = true', [tagId]
+      );
+      const tag = tagRows[0];
+      if (!tag) return { notFound: true };
 
-  const tenant = db.prepare('SELECT id, name, slug, logo_url, status FROM tenants WHERE id = ?').get(tag.tenant_id);
-  if (!tenant || tenant.status !== 'ACTIVE') {
-    return res.status(404).json({ error: 'Empresa associada a este chaveiro está inativa.' });
-  }
+      const { rows: tenantRows } = await client.query(
+        'SELECT id, name, slug, logo_url, status FROM tenants WHERE id = $1', [tag.tenant_id]
+      );
+      const tenant = tenantRows[0];
+      if (!tenant || tenant.status !== 'ACTIVE') return { notFound: true };
 
-  // Contabiliza o "scan" de forma assíncrona/best-effort
-  db.prepare('UPDATE nfc_tags SET scan_count = scan_count + 1 WHERE id = ?').run(tag.id);
+      await client.query('UPDATE nfc_tags SET scan_count = scan_count + 1 WHERE id = $1', [tag.id]);
 
-  res.json({
-    tag: {
-      tagId: tag.tag_id,
-      itemCode: tag.item_code,
-      itemTitle: tag.item_title,
-      mainLink: tag.main_link,
-      sacLink: tag.sac_link,
-      restrictedLink: tag.restricted_link,
-      photoUrl: tag.photo_url,
-    },
-    company: {
-      name: tenant.name,
-      logoUrl: tenant.logo_url,
-    },
-  });
+      return { tag, tenant };
+    });
+
+    if (result.notFound) {
+      return res.status(404).json({ error: 'Chaveiro NFC não encontrado ou inativo.' });
+    }
+
+    const { tag, tenant } = result;
+    res.json({
+      tag: {
+        tagId: tag.tag_id,
+        itemCode: tag.item_code,
+        itemTitle: tag.item_title,
+        mainLink: tag.main_link,
+        sacLink: tag.sac_link,
+        restrictedLink: tag.restricted_link,
+        photoUrl: tag.photo_url,
+      },
+      company: { name: tenant.name, logoUrl: tenant.logo_url },
+    });
+  } catch (err) { next(err); }
 });
 
 export default router;

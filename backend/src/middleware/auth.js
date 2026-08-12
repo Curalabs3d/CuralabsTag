@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { db } from '../db/index.js';
+import { withTenantContext } from '../db/index.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 
@@ -11,8 +11,10 @@ export function signToken(user) {
   );
 }
 
-// Garante que existe um token válido e popula req.user
-export function requireAuth(req, res, next) {
+// Garante que existe um token válido e popula req.user.
+// A busca do usuário por id acontece antes de sabermos seu tenant, então
+// usa o contexto explícito AUTH_LOOKUP (ver policy de RLS em users).
+export async function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
 
@@ -22,7 +24,10 @@ export function requireAuth(req, res, next) {
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    const user = db.prepare('SELECT id, tenant_id, name, email, role FROM users WHERE id = ?').get(payload.sub);
+    const user = await withTenantContext({ tenantId: null, role: 'AUTH_LOOKUP' }, async (client) => {
+      const { rows } = await client.query('SELECT id, tenant_id, name, email, role FROM users WHERE id = $1', [payload.sub]);
+      return rows[0];
+    });
     if (!user) return res.status(401).json({ error: 'Usuário não encontrado.' });
     req.user = user;
     next();
