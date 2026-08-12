@@ -20,7 +20,7 @@ router.get('/nfc/:tagId', async (req, res, next) => {
       if (!tag) return { notFound: true };
 
       const { rows: tenantRows } = await client.query(
-        'SELECT id, name, slug, logo_url, status FROM tenants WHERE id = $1', [tag.tenant_id]
+        'SELECT id, name, slug, logo_url, brand_color, welcome_message, status FROM tenants WHERE id = $1', [tag.tenant_id]
       );
       const tenant = tenantRows[0];
       if (!tenant || tenant.status !== 'ACTIVE') return { notFound: true };
@@ -45,7 +45,7 @@ router.get('/nfc/:tagId', async (req, res, next) => {
         restrictedLink: tag.restricted_link,
         photoUrl: tag.photo_url,
       },
-      company: { name: tenant.name, logoUrl: tenant.logo_url },
+      company: { name: tenant.name, logoUrl: tenant.logo_url, brandColor: tenant.brand_color, welcomeMessage: tenant.welcome_message },
     });
   } catch (err) { next(err); }
 });

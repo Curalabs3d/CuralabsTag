@@ -46,4 +46,8 @@ export const api = {
 
   // Público
   getPublicTag: (tagId) => request(`/public/nfc/${tagId}`),
+
+  // Marca (branding) do próprio tenant
+  getBranding: (token) => request('/branding', { token }),
+  updateBranding: (token, payload) => request('/branding', { method: 'PUT', token, body: payload }),
 };

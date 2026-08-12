@@ -3,6 +3,10 @@ import { useParams } from 'react-router-dom';
 import { Building2, Headset, Lock, Loader2, WifiOff } from 'lucide-react';
 import { api } from '../api/client.js';
 
+const DEFAULT_ACCENT = '#FF5C00';
+
+// Usa a cor de marca do tenant via variável CSS (--tenant-accent), com fallback
+// para o laranja padrão da CuraLabs3D caso o tenant não tenha configurado uma.
 function ActionButton({ href, icon: Icon, label, primary }) {
   if (!href) return null;
   return (
@@ -12,10 +16,10 @@ function ActionButton({ href, icon: Icon, label, primary }) {
       rel="noreferrer"
       className={`group flex items-center gap-3 rounded-xl border px-4 py-4 transition-all active:scale-[0.98]
         ${primary
-          ? 'border-accent/40 bg-accent/10 hover:bg-accent/15 hover:shadow-glow'
+          ? 'border-[var(--tenant-accent)]/40 bg-[var(--tenant-accent)]/10 hover:bg-[var(--tenant-accent)]/15'
           : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]'}`}
     >
-      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${primary ? 'bg-accent text-base-950' : 'bg-white/5 text-white/70'}`}>
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${primary ? 'bg-[var(--tenant-accent)] text-base-950' : 'bg-white/5 text-white/70'}`}>
         <Icon size={18} />
       </div>
       <span className={`font-display text-sm font-medium ${primary ? 'text-white' : 'text-white/80'}`}>{label}</span>
@@ -60,11 +64,15 @@ export default function NfcLanding() {
   }
 
   const { tag, company } = state.data;
+  const accent = company.brandColor || DEFAULT_ACCENT;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-base-950">
+    <div
+      className="relative min-h-screen overflow-hidden bg-base-950"
+      style={{ '--tenant-accent': accent }}
+    >
       <div className="absolute inset-0 bg-grid opacity-30" />
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-accent/20 blur-[100px]" />
+      <div className="pointer-events-none absolute -top-32 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-[var(--tenant-accent)]/20 blur-[100px]" />
 
       <div className="relative z-10 flex min-h-screen flex-col px-6 py-10">
         <div className="mx-auto w-full max-w-sm flex-1">
@@ -73,8 +81,8 @@ export default function NfcLanding() {
             {tag.photoUrl ? (
               <img src={tag.photoUrl} alt={tag.itemTitle} className="mb-5 h-40 w-full rounded-xl border border-white/10 object-cover" />
             ) : (
-              <div className="mb-5 flex h-24 w-24 items-center justify-center rounded-2xl border border-accent/30 bg-accent/10">
-                <Building2 className="text-accent" size={32} />
+              <div className="mb-5 flex h-24 w-24 items-center justify-center rounded-2xl border border-[var(--tenant-accent)]/30 bg-[var(--tenant-accent)]/10">
+                <Building2 className="text-[var(--tenant-accent)]" size={32} />
               </div>
             )}
 
@@ -84,6 +92,9 @@ export default function NfcLanding() {
             <p className="text-xs font-medium uppercase tracking-wider text-white/40">{company.name}</p>
             <h1 className="mt-1 font-display text-xl font-semibold text-white">{tag.itemTitle || tag.tagId}</h1>
             {tag.itemCode && <p className="mt-1 font-mono text-xs text-white/30">{tag.itemCode}</p>}
+            {company.welcomeMessage && (
+              <p className="mt-3 text-sm text-white/60">{company.welcomeMessage}</p>
+            )}
           </div>
 
           <div className="space-y-3">

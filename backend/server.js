@@ -7,6 +7,7 @@ import authRoutes from './src/routes/auth.js';
 import tenantRoutes from './src/routes/tenants.js';
 import tagRoutes from './src/routes/tags.js';
 import publicRoutes from './src/routes/public.js';
+import brandingRoutes from './src/routes/branding.js';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/branding', brandingRoutes);
 
 // Handler de erro genérico
 app.use((err, req, res, next) => {

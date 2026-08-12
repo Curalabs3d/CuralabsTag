@@ -4,6 +4,7 @@ import AppShell from '../components/AppShell.jsx';
 import ExcelUploader from '../components/ExcelUploader.jsx';
 import TagsTable from '../components/TagsTable.jsx';
 import NfcCapacityPanel from '../components/NfcCapacityPanel.jsx';
+import BrandingSettings from '../components/BrandingSettings.jsx';
 import { api } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -27,7 +28,7 @@ export default function Dashboard() {
   const { token } = useAuth();
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('table'); // table | import
+  const [tab, setTab] = useState('table'); // table | import | branding
   const [exporting, setExporting] = useState(false);
   const [newTagOpen, setNewTagOpen] = useState(false);
 
@@ -86,6 +87,7 @@ export default function Dashboard() {
         {[
           { id: 'table', label: 'Tabela de Tags' },
           { id: 'import', label: 'Importar Excel/CSV' },
+          { id: 'branding', label: 'Marca da Empresa' },
         ].map((t) => (
           <button
             key={t.id}
@@ -107,6 +109,8 @@ export default function Dashboard() {
       )}
 
       {tab === 'import' && <ExcelUploader onImported={fetchTags} />}
+
+      {tab === 'branding' && <BrandingSettings />}
 
       {newTagOpen && <NewTagModal onClose={() => setNewTagOpen(false)} onCreated={fetchTags} />}
     </AppShell>
