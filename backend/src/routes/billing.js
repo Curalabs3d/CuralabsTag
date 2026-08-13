@@ -43,11 +43,15 @@ router.post('/checkout', requireAuth, requireRole('TENANT_ADMIN'), resolveTenant
     });
 
     if (result.error) return res.status(400).json({ error: result.error });
-    const { plan, tenant, subscriptionId } = result;
+    const { plan, subscriptionId } = result;
 
     const checkout = await createSubscriptionCheckout({
       reason: `NFC Hub Manager — Plano ${plan.name}`,
-      payerEmail: tenant.contact_email,
+      // Usa o e-mail do usuário logado (quem está de fato completando o
+      // checkout), não o e-mail genérico de contato da empresa — o Mercado
+      // Pago exige que o pagador seja essa mesma identidade, e um e-mail
+      // institucional geralmente não corresponde a nenhuma conta MP.
+      payerEmail: req.user.email,
       monthlyPrice: plan.monthly_price,
       backUrl: `${PUBLIC_BASE_URL}/dashboard`,
       externalReference: subscriptionId,
