@@ -60,7 +60,15 @@ router.post('/checkout', requireAuth, requireRole('TENANT_ADMIN'), resolveTenant
       )
     );
 
-    res.json({ checkoutUrl: checkout.init_point });
+    // A API do Mercado Pago retorna duas URLs: init_point (produção) e
+    // sandbox_init_point (teste). Quando a credencial usada é de teste
+    // (Access Token começando com TEST-), sandbox_init_point é a que
+    // realmente abre o ambiente simulado — usar init_point nesse caso
+    // levaria ao checkout de produção por engano, com cartões reais.
+    const isTestCredential = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('TEST-');
+    const checkoutUrl = (isTestCredential && checkout.sandbox_init_point) ? checkout.sandbox_init_point : checkout.init_point;
+
+    res.json({ checkoutUrl });
   } catch (err) {
     if (err.notConfigured) return res.status(503).json({ error: 'Pagamentos ainda não configurados.' });
     next(err);
