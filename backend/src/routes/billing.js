@@ -53,11 +53,6 @@ router.post('/checkout', requireAuth, requireRole('TENANT_ADMIN'), resolveTenant
       externalReference: subscriptionId,
     });
 
-    // LOG TEMPORÁRIO DE DIAGNÓSTICO — remover depois de confirmar a causa
-    // do checkout abrindo em produção mesmo com credencial de teste.
-    console.log('[billing/checkout] resposta crua do Mercado Pago:', JSON.stringify(checkout, null, 2));
-    console.log('[billing/checkout] token usado começa com TEST-?', (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('TEST-'));
-
     await withTenantContext(req.tenantContext, (client) =>
       client.query(
         `UPDATE subscriptions SET plan_id = $1, status = 'PENDING', mercadopago_subscription_id = $2, updated_at = now() WHERE id = $3`,
@@ -65,15 +60,13 @@ router.post('/checkout', requireAuth, requireRole('TENANT_ADMIN'), resolveTenant
       )
     );
 
-    // A API do Mercado Pago retorna duas URLs: init_point (produção) e
-    // sandbox_init_point (teste). Quando a credencial usada é de teste
-    // (Access Token começando com TEST-), sandbox_init_point é a que
-    // realmente abre o ambiente simulado — usar init_point nesse caso
-    // levaria ao checkout de produção por engano, com cartões reais.
-    const isTestCredential = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('TEST-');
-    const checkoutUrl = (isTestCredential && checkout.sandbox_init_point) ? checkout.sandbox_init_point : checkout.init_point;
-
-    res.json({ checkoutUrl });
+    // A API de Assinaturas (Preapproval) do Mercado Pago não tem uma URL de
+    // sandbox separada — diferente da API de pagamento único (Checkout Pro),
+    // ela sempre retorna só init_point, mesmo com credencial de teste. O
+    // "modo teste" aqui vem da combinação: credencial TEST- no backend +
+    // cartão de teste oficial preenchido na hora de pagar (nunca um cartão
+    // real, mesmo a tela parecendo produção).
+    res.json({ checkoutUrl: checkout.init_point });
   } catch (err) {
     if (err.notConfigured) return res.status(503).json({ error: 'Pagamentos ainda não configurados.' });
     next(err);
