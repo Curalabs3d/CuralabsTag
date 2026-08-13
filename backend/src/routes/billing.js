@@ -53,6 +53,11 @@ router.post('/checkout', requireAuth, requireRole('TENANT_ADMIN'), resolveTenant
       externalReference: subscriptionId,
     });
 
+    // LOG TEMPORÁRIO DE DIAGNÓSTICO — remover depois de confirmar a causa
+    // do checkout abrindo em produção mesmo com credencial de teste.
+    console.log('[billing/checkout] resposta crua do Mercado Pago:', JSON.stringify(checkout, null, 2));
+    console.log('[billing/checkout] token usado começa com TEST-?', (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('TEST-'));
+
     await withTenantContext(req.tenantContext, (client) =>
       client.query(
         `UPDATE subscriptions SET plan_id = $1, status = 'PENDING', mercadopago_subscription_id = $2, updated_at = now() WHERE id = $3`,
