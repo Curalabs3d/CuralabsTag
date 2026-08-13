@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
+import Plans from './pages/Plans.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
@@ -17,6 +18,9 @@ export default function App() {
 
       {/* 2. Solicitação de conta corporativa */}
       <Route path="/register" element={<Register />} />
+
+      {/* Página pública de venda (planos) */}
+      <Route path="/planos" element={<Plans />} />
 
       {/* Recuperação de senha */}
       <Route path="/esqueci-senha" element={<ForgotPassword />} />

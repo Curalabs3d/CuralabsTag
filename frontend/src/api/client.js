@@ -52,4 +52,23 @@ export const api = {
   // Marca (branding) do próprio tenant
   getBranding: (token) => request('/branding', { token }),
   updateBranding: (token, payload) => request('/branding', { method: 'PUT', token, body: payload }),
+
+  // Planos (público + super admin)
+  getPublicPlans: () => request('/plans'),
+  getAllPlans: (token) => request('/plans/all', { token }),
+  createPlan: (token, payload) => request('/plans', { method: 'POST', token, body: payload }),
+  updatePlan: (token, id, payload) => request(`/plans/${id}`, { method: 'PUT', token, body: payload }),
+
+  // Assinaturas
+  getMySubscription: (token) => request('/subscriptions/me', { token }),
+  getAllSubscriptions: (token) => request('/subscriptions', { token }),
+  updateSubscription: (token, id, payload) => request(`/subscriptions/${id}`, { method: 'PUT', token, body: payload }),
+  getTenantOverrides: (token, tenantId) => request(`/subscriptions/tenant/${tenantId}/overrides`, { token }),
+  setTenantOverride: (token, tenantId, moduleKey, enabled) =>
+    request(`/subscriptions/tenant/${tenantId}/overrides`, { method: 'PUT', token, body: { moduleKey, enabled } }),
+  removeTenantOverride: (token, tenantId, moduleKey) =>
+    request(`/subscriptions/tenant/${tenantId}/overrides/${moduleKey}`, { method: 'DELETE', token }),
+
+  // Cobrança
+  startCheckout: (token, planId) => request('/billing/checkout', { method: 'POST', token, body: { planId } }),
 };

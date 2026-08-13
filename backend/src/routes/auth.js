@@ -107,6 +107,18 @@ router.post('/register', async (req, res, next) => {
         [userId, tenantId, adminName, adminEmail.toLowerCase().trim(), passwordHash]
       );
 
+      // Toda empresa nova começa em modo TRIAL no plano de entrada — o
+      // Super Admin ou o próprio tenant (via checkout) pode trocar depois.
+      const { rows: entryPlanRows } = await client.query(
+        "SELECT id FROM plans WHERE active = true ORDER BY display_order LIMIT 1"
+      );
+      if (entryPlanRows[0]) {
+        await client.query(
+          `INSERT INTO subscriptions (id, tenant_id, plan_id, status) VALUES ($1,$2,$3,'TRIAL')`,
+          [nanoid(), tenantId, entryPlanRows[0].id]
+        );
+      }
+
       return { tenantId, slug };
     });
 

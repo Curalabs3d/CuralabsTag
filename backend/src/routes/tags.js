@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import { withTenantContext } from '../db/index.js';
 import { requireAuth } from '../middleware/auth.js';
 import { resolveTenantScope } from '../middleware/tenant.js';
+import { requireModule, getTenantPlanInfo } from '../middleware/modules.js';
 import { NFC_MODELS, validateTagCapacity } from '../utils/nfcCapacity.js';
 
 const router = Router();
@@ -83,6 +84,18 @@ router.post('/', async (req, res, next) => {
     const id = nanoid();
     try {
       const created = await withTenantContext(req.tenantContext, async (client) => {
+        if (req.user.role !== 'SUPER_ADMIN') {
+          const { tagLimit } = await getTenantPlanInfo(client, tenantId);
+          if (tagLimit !== null) {
+            const { rows: countRows } = await client.query('SELECT COUNT(*)::int AS c FROM nfc_tags WHERE tenant_id = $1', [tenantId]);
+            if (countRows[0].c >= tagLimit) {
+              const err = new Error(`Seu plano permite até ${tagLimit} tags. Faça upgrade para cadastrar mais.`);
+              err.statusCode = 403;
+              throw err;
+            }
+          }
+        }
+
         await client.query(
           `INSERT INTO nfc_tags (
             id, tenant_id, tag_id, item_code, item_title, main_link, sac_link, restricted_link, photo_url,
@@ -99,6 +112,9 @@ router.post('/', async (req, res, next) => {
       });
       res.status(201).json({ tag: serializeTag(created) });
     } catch (err) {
+      if (err.statusCode === 403) {
+        return res.status(403).json({ error: err.message });
+      }
       if (err.code === '23505') { // unique_violation
         return res.status(409).json({ error: `A tag "${tagId}" já existe para esta empresa.` });
       }
@@ -108,7 +124,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // POST /api/tags/bulk-import
-router.post('/bulk-import', async (req, res, next) => {
+router.post('/bulk-import', requireModule('bulk_import'), async (req, res, next) => {
   try {
     const tenantId = req.tenantScope || req.body.tenantId;
     if (!tenantId) return res.status(400).json({ error: 'tenantId é obrigatório.' });
@@ -121,6 +137,26 @@ router.post('/bulk-import', async (req, res, next) => {
     const warnings = [];
 
     await withTenantContext(req.tenantContext, async (client) => {
+      if (req.user.role !== 'SUPER_ADMIN') {
+        const { tagLimit } = await getTenantPlanInfo(client, tenantId);
+        if (tagLimit !== null) {
+          const { rows: existingIds } = await client.query('SELECT tag_id FROM nfc_tags WHERE tenant_id = $1', [tenantId]);
+          const existingSet = new Set(existingIds.map((r) => r.tag_id));
+          const incomingIds = new Set(
+            rows.map((r) => (r.ID_TAG || r.tagId || '').toString().trim()).filter(Boolean)
+          );
+          const newCount = [...incomingIds].filter((id) => !existingSet.has(id)).length;
+          const projectedTotal = existingSet.size + newCount;
+          if (projectedTotal > tagLimit) {
+            const err = new Error(
+              `Essa importação levaria a empresa a ${projectedTotal} tags, mas o plano atual permite até ${tagLimit}. Faça upgrade ou reduza o lote.`
+            );
+            err.statusCode = 403;
+            throw err;
+          }
+        }
+      }
+
       for (const [index, row] of rows.entries()) {
         const tagId = (row.ID_TAG || row.tagId || '').toString().trim();
         if (!tagId) {
@@ -190,7 +226,10 @@ router.post('/bulk-import', async (req, res, next) => {
     });
 
     res.json({ message: 'Importação concluída.', created, updated, skipped, errors, warnings });
-  } catch (err) { next(err); }
+  } catch (err) {
+    if (err.statusCode === 403) return res.status(403).json({ error: err.message });
+    next(err);
+  }
 });
 
 // PUT /api/tags/:id — edição rápida individual
@@ -283,7 +322,7 @@ router.delete('/:id', async (req, res, next) => {
 });
 
 // GET /api/tags/export-batch
-router.get('/export-batch', async (req, res, next) => {
+router.get('/export-batch', requireModule('batch_export'), async (req, res, next) => {
   try {
     const rows = await withTenantContext(req.tenantContext, async (client) => {
       const { rows } = req.tenantScope

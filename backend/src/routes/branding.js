@@ -2,12 +2,13 @@ import { Router } from 'express';
 import { withTenantContext } from '../db/index.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { resolveTenantScope } from '../middleware/tenant.js';
+import { requireModule } from '../middleware/modules.js';
 
 const router = Router();
 
 // Apenas TENANT_ADMIN edita a própria marca (não faz sentido para TENANT_USER
 // nem para SUPER_ADMIN, que não tem uma "própria" empresa).
-router.use(requireAuth, requireRole('TENANT_ADMIN'), resolveTenantScope);
+router.use(requireAuth, requireRole('TENANT_ADMIN'), resolveTenantScope, requireModule('branding'));
 
 const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
 const MAX_LABEL_LENGTH = 40;

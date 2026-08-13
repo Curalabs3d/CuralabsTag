@@ -5,6 +5,7 @@ import ExcelUploader from '../components/ExcelUploader.jsx';
 import TagsTable from '../components/TagsTable.jsx';
 import NfcCapacityPanel from '../components/NfcCapacityPanel.jsx';
 import BrandingSettings from '../components/BrandingSettings.jsx';
+import TenantAdminPanel from '../components/TenantAdminPanel.jsx';
 import { api } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -88,6 +89,7 @@ export default function Dashboard() {
           { id: 'table', label: 'Tabela de Tags' },
           { id: 'import', label: 'Importar Excel/CSV' },
           { id: 'branding', label: 'Marca da Empresa' },
+          { id: 'admin', label: 'Admin' },
         ].map((t) => (
           <button
             key={t.id}
@@ -111,6 +113,8 @@ export default function Dashboard() {
       {tab === 'import' && <ExcelUploader onImported={fetchTags} />}
 
       {tab === 'branding' && <BrandingSettings />}
+
+      {tab === 'admin' && <TenantAdminPanel />}
 
       {newTagOpen && <NewTagModal onClose={() => setNewTagOpen(false)} onCreated={fetchTags} />}
     </AppShell>

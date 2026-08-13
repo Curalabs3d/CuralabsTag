@@ -8,6 +8,9 @@ import tenantRoutes from './src/routes/tenants.js';
 import tagRoutes from './src/routes/tags.js';
 import publicRoutes from './src/routes/public.js';
 import brandingRoutes from './src/routes/branding.js';
+import planRoutes from './src/routes/plans.js';
+import subscriptionRoutes from './src/routes/subscriptions.js';
+import billingRoutes from './src/routes/billing.js';
 
 dotenv.config();
 
@@ -25,6 +28,9 @@ app.use('/api/tenants', tenantRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/branding', brandingRoutes);
+app.use('/api/plans', planRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/billing', billingRoutes); // inclui /api/billing/webhooks/mercadopago
 
 // Handler de erro genérico
 app.use((err, req, res, next) => {
