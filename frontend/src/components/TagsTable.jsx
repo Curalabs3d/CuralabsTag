@@ -34,11 +34,15 @@ function ModelBadge({ tag }) {
   );
 }
 
-export default function TagsTable({ tags, onChange, publicBaseUrl }) {
+export default function TagsTable({ tags, onChange, publicBaseUrl, branding }) {
   const { token } = useAuth();
   const [editingId, setEditingId] = useState(null);
   const [draft, setDraft] = useState({});
   const [busyId, setBusyId] = useState(null);
+
+  const mainLinkLabel = branding?.main_link_label || 'Link Principal';
+  const sacLinkLabel = branding?.sac_link_label || 'SAC';
+  const restrictedLinkLabel = branding?.restricted_link_label || 'Área Restrita';
 
   const startEdit = (tag) => {
     setEditingId(tag.id);
@@ -116,9 +120,9 @@ export default function TagsTable({ tags, onChange, publicBaseUrl }) {
               <th className="px-4 py-3 font-medium">Modelo</th>
               <th className="px-4 py-3 font-medium">Código</th>
               <th className="px-4 py-3 font-medium">Título / Item</th>
-              <th className="px-4 py-3 font-medium">Link Principal</th>
-              <th className="px-4 py-3 font-medium">SAC</th>
-              <th className="px-4 py-3 font-medium">Área Restrita</th>
+              <th className="px-4 py-3 font-medium">{mainLinkLabel}</th>
+              <th className="px-4 py-3 font-medium">{sacLinkLabel}</th>
+              <th className="px-4 py-3 font-medium">{restrictedLinkLabel}</th>
               <th className="px-4 py-3 font-medium text-right">Scans</th>
               <th className="px-4 py-3 font-medium text-right">Ações</th>
             </tr>
@@ -197,6 +201,7 @@ export default function TagsTable({ tags, onChange, publicBaseUrl }) {
                           onCustomCapacityChange={(v) => setDraft((d) => ({ ...d, customCapacityBytes: v }))}
                           links={{ mainLink: draft.mainLink, sacLink: draft.sacLink, restrictedLink: draft.restrictedLink }}
                           selectedLinks={draft.directLinksSelected} onToggleLink={toggleDraftLink}
+                          linkLabels={{ mainLink: mainLinkLabel, sacLink: sacLinkLabel, restrictedLink: restrictedLinkLabel }}
                         />
                         {saveError && <p className="mt-2 text-xs text-red-400">{saveError}</p>}
                       </td>

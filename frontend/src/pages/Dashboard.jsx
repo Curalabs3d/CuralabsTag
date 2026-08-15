@@ -28,6 +28,7 @@ function StatCard({ icon: Icon, label, value }) {
 export default function Dashboard() {
   const { token } = useAuth();
   const [tags, setTags] = useState([]);
+  const [branding, setBranding] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('table'); // table | import | branding
   const [exporting, setExporting] = useState(false);
@@ -44,6 +45,17 @@ export default function Dashboard() {
   }, [token]);
 
   useEffect(() => { fetchTags(); }, [fetchTags]);
+
+  // Busca os rótulos de botão já customizados pela empresa, para usar como
+  // título de coluna no formulário de tag — evita o usuário ter que adivinhar
+  // que "Link Principal" é, na prática, "Detalhes da embarcação" para ele.
+  useEffect(() => {
+    let cancelled = false;
+    api.getBranding(token).then((data) => {
+      if (!cancelled) setBranding(data.branding);
+    }).catch(() => { /* silencioso — formulário cai nos rótulos padrão */ });
+    return () => { cancelled = true; };
+  }, [token]);
 
   const totalScans = tags.reduce((sum, t) => sum + (t.scan_count || 0), 0);
 
@@ -106,7 +118,7 @@ export default function Dashboard() {
         loading ? (
           <div className="flex justify-center py-16"><Loader2 className="animate-spin text-accent" /></div>
         ) : (
-          <TagsTable tags={tags} onChange={fetchTags} publicBaseUrl={PUBLIC_BASE_URL} />
+          <TagsTable tags={tags} onChange={fetchTags} publicBaseUrl={PUBLIC_BASE_URL} branding={branding} />
         )
       )}
 
@@ -116,7 +128,7 @@ export default function Dashboard() {
 
       {tab === 'admin' && <TenantAdminPanel />}
 
-      {newTagOpen && <NewTagModal onClose={() => setNewTagOpen(false)} onCreated={fetchTags} />}
+      {newTagOpen && <NewTagModal onClose={() => setNewTagOpen(false)} onCreated={fetchTags} branding={branding} />}
     </AppShell>
   );
 }
@@ -147,7 +159,7 @@ function saveLastNfcConfig(config) {
   } catch { /* localStorage indisponível — segue sem lembrar, sem quebrar o fluxo */ }
 }
 
-function NewTagModal({ onClose, onCreated }) {
+function NewTagModal({ onClose, onCreated, branding }) {
   const { token } = useAuth();
   const [form, setForm] = useState({ tagId: '', itemCode: '', itemTitle: '', mainLink: '', sacLink: '', restrictedLink: '' });
   const lastConfig = loadLastNfcConfig();
@@ -157,6 +169,13 @@ function NewTagModal({ onClose, onCreated }) {
   const [selectedLinks, setSelectedLinks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Usa os rótulos que a empresa já configurou na aba Marca (ex: "Detalhes
+  // da embarcação" em vez de "Link principal") — cai no padrão se a empresa
+  // nunca customizou nada.
+  const mainLinkLabel = branding?.main_link_label || 'Link principal';
+  const sacLinkLabel = branding?.sac_link_label || 'Link SAC';
+  const restrictedLinkLabel = branding?.restricted_link_label || 'Link área restrita';
 
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -204,15 +223,15 @@ function NewTagModal({ onClose, onCreated }) {
             <input value={form.itemTitle} onChange={update('itemTitle')} className="input-field" />
           </div>
           <div>
-            <label className="label-field">Link principal</label>
+            <label className="label-field">{mainLinkLabel}</label>
             <input value={form.mainLink} onChange={update('mainLink')} className="input-field" placeholder="https://..." />
           </div>
           <div>
-            <label className="label-field">Link SAC</label>
+            <label className="label-field">{sacLinkLabel}</label>
             <input value={form.sacLink} onChange={update('sacLink')} className="input-field" placeholder="https://..." />
           </div>
           <div>
-            <label className="label-field">Link área restrita</label>
+            <label className="label-field">{restrictedLinkLabel}</label>
             <input value={form.restrictedLink} onChange={update('restrictedLink')} className="input-field" placeholder="https://..." />
           </div>
         </div>
@@ -225,6 +244,7 @@ function NewTagModal({ onClose, onCreated }) {
             customCapacityBytes={customCapacityBytes} onCustomCapacityChange={setCustomCapacityBytes}
             links={{ mainLink: form.mainLink, sacLink: form.sacLink, restrictedLink: form.restrictedLink }}
             selectedLinks={selectedLinks} onToggleLink={toggleLink}
+            linkLabels={{ mainLink: mainLinkLabel, sacLink: sacLinkLabel, restrictedLink: restrictedLinkLabel }}
           />
           <p className="mt-2 text-[11px] text-white/25">
             Modelo e modo de gravação ficam salvos para a próxima tag — só mude quando precisar.

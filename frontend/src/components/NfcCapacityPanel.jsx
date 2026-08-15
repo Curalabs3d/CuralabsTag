@@ -15,7 +15,9 @@ export default function NfcCapacityPanel({
   customCapacityBytes, onCustomCapacityChange,
   links, // { mainLink, sacLink, restrictedLink }
   selectedLinks, onToggleLink, // array + setter
+  linkLabels, // opcional: { mainLink, sacLink, restrictedLink } customizados pela empresa
 }) {
+  const effectiveLabels = { ...LINK_LABELS, ...linkLabels };
   const capacity = useMemo(() => validateTagCapacity({
     model, customCapacityBytes, writeMode, hubUrl, links, selectedLinks,
   }), [model, customCapacityBytes, writeMode, hubUrl, links, selectedLinks]);
@@ -73,7 +75,7 @@ export default function NfcCapacityPanel({
             Escolha quais links serão gravados diretamente no chip (sem espaços reservados para os não marcados):
           </p>
           <div className="space-y-1.5">
-            {Object.entries(LINK_LABELS).map(([key, label]) => (
+            {Object.entries(effectiveLabels).map(([key, label]) => (
               <label key={key} className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${links[key] ? 'text-white/80' : 'text-white/25'}`}>
                 <input
                   type="checkbox"
