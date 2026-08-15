@@ -7,7 +7,11 @@ import { MODULE_KEYS } from '../utils/modules.js';
 
 const router = Router();
 const asSuperAdmin = (callback) => withTenantContext({ tenantId: null, role: 'SUPER_ADMIN' }, callback);
-const asVoucherRedemption = (callback) => withTenantContext({ tenantId: null, role: 'VOUCHER_REDEMPTION' }, callback);
+// Diferente de asSuperAdmin, o resgate de voucher precisa do tenant REAL de
+// quem está resgatando — a policy de RLS em voucher_redemptions exige
+// tenant_id = app.current_tenant_id, então o contexto precisa carregar
+// esse valor, não ficar fixo em null.
+const asVoucherRedemption = (tenantId, callback) => withTenantContext({ tenantId, role: 'VOUCHER_REDEMPTION' }, callback);
 
 function generateCode() {
   // Código curto, digitável, sem caracteres ambíguos (0/O, 1/I)
@@ -73,7 +77,7 @@ router.post('/redeem', requireAuth, requireRole('TENANT_ADMIN'), resolveTenantSc
     const { code } = req.body;
     if (!code) return res.status(400).json({ error: 'Informe o código do voucher.' });
 
-    const result = await asVoucherRedemption(async (client) => {
+    const result = await asVoucherRedemption(req.tenantScope, async (client) => {
       const { rows: voucherRows } = await client.query(
         'SELECT * FROM vouchers WHERE code = $1', [code.toUpperCase().trim()]
       );
