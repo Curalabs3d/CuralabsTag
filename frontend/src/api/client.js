@@ -36,6 +36,7 @@ export const api = {
   approveTenant: (token, id) => request(`/tenants/${id}/approve`, { method: 'PATCH', token }),
   rejectTenant: (token, id) => request(`/tenants/${id}/reject`, { method: 'PATCH', token }),
   suspendTenant: (token, id) => request(`/tenants/${id}/suspend`, { method: 'PATCH', token }),
+  reactivateTenant: (token, id) => request(`/tenants/${id}/reactivate`, { method: 'PATCH', token }),
 
   // Tags
   listTags: (token) => request('/tags', { token }),
@@ -71,4 +72,10 @@ export const api = {
 
   // Cobrança
   startCheckout: (token, planId) => request('/billing/checkout', { method: 'POST', token, body: { planId } }),
+
+  // Vouchers
+  getAllVouchers: (token) => request('/vouchers/admin', { token }),
+  createVoucher: (token, payload) => request('/vouchers/admin', { method: 'POST', token, body: payload }),
+  deactivateVoucher: (token, id) => request(`/vouchers/admin/${id}/deactivate`, { method: 'PATCH', token }),
+  redeemVoucher: (token, code) => request('/vouchers/redeem', { method: 'POST', token, body: { code } }),
 };

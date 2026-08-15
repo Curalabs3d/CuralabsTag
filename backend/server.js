@@ -11,6 +11,7 @@ import brandingRoutes from './src/routes/branding.js';
 import planRoutes from './src/routes/plans.js';
 import subscriptionRoutes from './src/routes/subscriptions.js';
 import billingRoutes from './src/routes/billing.js';
+import voucherRoutes from './src/routes/vouchers.js';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/branding', brandingRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/billing', billingRoutes); // inclui /api/billing/webhooks/mercadopago
+app.use('/api/vouchers', voucherRoutes);
 
 // Handler de erro genérico
 app.use((err, req, res, next) => {

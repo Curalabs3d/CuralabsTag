@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Loader2, CreditCard, Nfc, ExternalLink, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Loader2, CreditCard, Nfc, ExternalLink, AlertTriangle, CheckCircle2, Ticket } from 'lucide-react';
 import { api } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -58,9 +59,14 @@ export default function TenantAdminPanel() {
     <div className="space-y-6">
       {/* Assinatura atual */}
       <div className="card p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <CreditCard size={16} className="text-accent" />
-          <h3 className="font-display text-sm font-semibold text-white">Sua assinatura</h3>
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CreditCard size={16} className="text-accent" />
+            <h3 className="font-display text-sm font-semibold text-white">Sua assinatura</h3>
+          </div>
+          <Link to="/resgatar" className="flex items-center gap-1.5 text-xs text-white/40 hover:text-accent">
+            <Ticket size={13} /> Tenho um voucher
+          </Link>
         </div>
 
         {subscription ? (

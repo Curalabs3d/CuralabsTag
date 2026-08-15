@@ -3,11 +3,11 @@ import { nanoid } from 'nanoid';
 import { withTenantContext } from '../db/index.js';
 import { requireAuth } from '../middleware/auth.js';
 import { resolveTenantScope } from '../middleware/tenant.js';
-import { requireModule, getTenantPlanInfo } from '../middleware/modules.js';
+import { requireModule, getTenantPlanInfo, blockIfPastDueBeyondGracePeriod } from '../middleware/modules.js';
 import { NFC_MODELS, validateTagCapacity } from '../utils/nfcCapacity.js';
 
 const router = Router();
-router.use(requireAuth, resolveTenantScope);
+router.use(requireAuth, resolveTenantScope, blockIfPastDueBeyondGracePeriod());
 
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://nfc.curalabs3d.com.br';
 const VALID_MODELS = Object.keys(NFC_MODELS);

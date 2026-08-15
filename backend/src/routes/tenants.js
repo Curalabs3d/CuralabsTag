@@ -78,4 +78,7 @@ router.patch('/:id/reject', (req, res, next) => updateTenantStatus(req, res, nex
 // PATCH /api/tenants/:id/suspend
 router.patch('/:id/suspend', (req, res, next) => updateTenantStatus(req, res, next, 'SUSPENDED'));
 
+// PATCH /api/tenants/:id/reactivate — reverte uma suspensão manual
+router.patch('/:id/reactivate', (req, res, next) => updateTenantStatus(req, res, next, 'ACTIVE'));
+
 export default router;

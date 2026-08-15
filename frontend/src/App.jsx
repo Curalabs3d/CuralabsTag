@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Plans from './pages/Plans.jsx';
+import RedeemVoucher from './pages/RedeemVoucher.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
@@ -21,6 +22,9 @@ export default function App() {
 
       {/* Página pública de venda (planos) */}
       <Route path="/planos" element={<Plans />} />
+
+      {/* Resgate de voucher (exige login) */}
+      <Route path="/resgatar" element={<RedeemVoucher />} />
 
       {/* Recuperação de senha */}
       <Route path="/esqueci-senha" element={<ForgotPassword />} />

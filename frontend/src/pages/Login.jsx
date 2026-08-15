@@ -19,7 +19,13 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(email, password);
-      navigate(user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard');
+      const pendingVoucherCode = sessionStorage.getItem('pending_voucher_code');
+      if (pendingVoucherCode) {
+        sessionStorage.removeItem('pending_voucher_code');
+        navigate(`/resgatar?codigo=${pendingVoucherCode}`);
+      } else {
+        navigate(user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard');
+      }
     } catch (err) {
       setError(err.message);
     } finally {

@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Building2, Nfc, ScanLine, CheckCircle2, XCircle, Loader2, Clock, ShieldOff, Puzzle, CreditCard } from 'lucide-react';
+import { Building2, Nfc, ScanLine, CheckCircle2, XCircle, Loader2, Clock, ShieldOff, ShieldCheck, Puzzle, CreditCard, Ticket } from 'lucide-react';
 import AppShell from '../components/AppShell.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 import SuperAdminBilling from '../components/SuperAdminBilling.jsx';
+import SuperAdminVouchers from '../components/SuperAdminVouchers.jsx';
 import TenantModuleOverridesModal from '../components/TenantModuleOverridesModal.jsx';
 import { api } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -51,6 +52,7 @@ export default function AdminPanel() {
       if (action === 'approve') await api.approveTenant(token, id);
       if (action === 'reject') await api.rejectTenant(token, id);
       if (action === 'suspend') await api.suspendTenant(token, id);
+      if (action === 'reactivate') await api.reactivateTenant(token, id);
       await load();
     } finally {
       setBusyId(null);
@@ -66,6 +68,7 @@ export default function AdminPanel() {
         {[
           { id: 'empresas', label: 'Empresas', icon: Building2 },
           { id: 'billing', label: 'Planos e Cobrança', icon: CreditCard },
+          { id: 'vouchers', label: 'Vouchers', icon: Ticket },
         ].map((v) => (
           <button
             key={v.id}
@@ -80,6 +83,8 @@ export default function AdminPanel() {
 
       {view === 'billing' ? (
         <SuperAdminBilling />
+      ) : view === 'vouchers' ? (
+        <SuperAdminVouchers />
       ) : (
         <>
           {overview && (
@@ -156,6 +161,11 @@ export default function AdminPanel() {
                             {t.status === 'ACTIVE' && (
                               <button disabled={isBusy} onClick={() => act(t.id, 'suspend')} className="rounded p-1.5 text-white/40 hover:bg-white/5 hover:text-amber-400" title="Suspender">
                                 <ShieldOff size={16} />
+                              </button>
+                            )}
+                            {t.status === 'SUSPENDED' && (
+                              <button disabled={isBusy} onClick={() => act(t.id, 'reactivate')} className="rounded p-1.5 text-white/40 hover:bg-white/5 hover:text-emerald-400" title="Reabilitar">
+                                <ShieldCheck size={16} />
                               </button>
                             )}
                             <button onClick={() => setModuleModalTenant(t)} className="rounded p-1.5 text-white/40 hover:bg-white/5 hover:text-accent" title="Módulos habilitados">
