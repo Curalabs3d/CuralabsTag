@@ -116,7 +116,7 @@ router.post('/', async (req, res, next) => {
         return res.status(403).json({ error: err.message });
       }
       if (err.code === '23505') { // unique_violation
-        return res.status(409).json({ error: `A tag "${tagId}" já existe para esta empresa.` });
+        return res.status(409).json({ error: `O código "${tagId}" já está em uso — cada tag precisa de um código único em todo o sistema, mesmo entre empresas diferentes.` });
       }
       throw err;
     }
@@ -193,16 +193,26 @@ router.post('/bulk-import', requireModule('bulk_import'), async (req, res, next)
         }
 
         const { rows: existingRows } = await client.query(
-          'SELECT id FROM nfc_tags WHERE tenant_id = $1 AND tag_id = $2', [tenantId, tagId]
+          'SELECT id, tenant_id FROM nfc_tags WHERE tag_id = $1', [tagId]
         );
         const existing = existingRows[0];
+
+        // Como tag_id agora é único em todo o sistema (não só por empresa),
+        // uma linha da planilha pode coincidir com uma tag que já pertence
+        // a OUTRA empresa. Nesse caso, nunca sobrescrevemos — isso seria
+        // sequestrar o cadastro de outro tenant. Reportamos como erro.
+        if (existing && existing.tenant_id !== tenantId) {
+          skipped++;
+          errors.push(`Linha ${index + 2}: a tag "${tagId}" já está cadastrada em outra empresa. Escolha um código diferente.`);
+          continue;
+        }
 
         await client.query(
           `INSERT INTO nfc_tags (
              id, tenant_id, tag_id, item_code, item_title, main_link, sac_link, restricted_link, photo_url,
              nfc_model, write_mode, direct_links_selected
            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-           ON CONFLICT (tenant_id, tag_id) DO UPDATE SET
+           ON CONFLICT (tag_id) DO UPDATE SET
              item_code = EXCLUDED.item_code,
              item_title = EXCLUDED.item_title,
              main_link = EXCLUDED.main_link,
